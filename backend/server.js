@@ -19,10 +19,13 @@ const friendRoutes = require('./routes/friends');
 const notificationRoutes = require('./routes/notifications');
 const analyticsRoutes = require('./routes/analytics');
 
-// Connect to database
-connectDB();
-
 const app = express();
+
+// Ensure DB connection for every request in serverless / local
+app.use(async (req, res, next) => {
+  await connectDB();
+  next();
+});
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -88,10 +91,14 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`\n🚀 TravelSplit Server running on port ${PORT}`);
-  console.log(`📡 Environment: ${process.env.NODE_ENV}`);
-  console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || 'Dynamic Localhost'}\n`);
-});
+
+// Listen only when running standalone (not in Vercel serverless context)
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`\n🚀 TravelSplit Server running on port ${PORT}`);
+    console.log(`📡 Environment: ${process.env.NODE_ENV}`);
+    console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || 'Dynamic Localhost'}\n`);
+  });
+}
 
 module.exports = app;
