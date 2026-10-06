@@ -69,6 +69,10 @@ if (process.env.NODE_ENV === 'development') {
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Health check
+app.get('/', (req, res) => {
+  res.json({ success: true, message: 'TravelSplit API Server is running', timestamp: new Date() });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'TravelSplit API is running', timestamp: new Date() });
 });
