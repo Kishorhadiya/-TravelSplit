@@ -4,6 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import { Plane, Lock, Mail, ArrowRight, ShieldCheck, Compass } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+import { tripService } from '../../services';
+
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,6 +23,19 @@ const Login = () => {
     try {
       await login({ email, password });
       toast.success('Welcome back to TravelSplit! ✈️');
+
+      const pendingTripId = localStorage.getItem('pendingTripId');
+      if (pendingTripId) {
+        try {
+          await tripService.join(pendingTripId);
+          localStorage.removeItem('pendingTripId');
+          toast.success('Joined trip automatically! ✈️');
+          navigate(`/trips/${pendingTripId}`);
+          return;
+        } catch (joinErr) {
+          console.error('Auto join failed:', joinErr);
+        }
+      }
       navigate('/dashboard');
     } catch (err) {
       const msg = err.response?.data?.message || 'Login failed. Please check your credentials.';

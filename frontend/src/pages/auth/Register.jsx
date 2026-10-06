@@ -4,6 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import { Plane, Lock, Mail, User, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+import { tripService } from '../../services';
+
 const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -22,6 +24,19 @@ const Register = () => {
     try {
       await register({ name, email, password, defaultCurrency: 'INR' });
       toast.success('Account created successfully! Welcome to TravelSplit 🎉');
+      
+      const pendingTripId = localStorage.getItem('pendingTripId');
+      if (pendingTripId) {
+        try {
+          await tripService.join(pendingTripId);
+          localStorage.removeItem('pendingTripId');
+          toast.success('Joined trip automatically! ✈️');
+          navigate(`/trips/${pendingTripId}`);
+          return;
+        } catch (joinErr) {
+          console.error('Auto join failed:', joinErr);
+        }
+      }
       navigate('/dashboard');
     } catch (err) {
       const msg = err.response?.data?.message || 'Registration failed. Please try again.';

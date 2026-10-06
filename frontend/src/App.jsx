@@ -34,9 +34,10 @@ function App() {
           }}
         />
         <Routes>
-          {/* Public Auth Routes */}
+          {/* Public Auth & Invite Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/trips/join/:id" element={<JoinTrip />} />
 
           {/* Protected Application Routes */}
           <Route
@@ -51,7 +52,6 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="trips" element={<TripsList />} />
             <Route path="trips/:id" element={<TripDetail />} />
-            <Route path="trips/join/:id" element={<JoinTrip />} />
             <Route path="friends" element={<FriendsList />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="profile" element={<Profile />} />
