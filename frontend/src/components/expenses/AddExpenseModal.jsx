@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Receipt, DollarSign, Calculator } from 'lucide-react';
+import { X, Receipt, IndianRupee, Calculator, UserCheck } from 'lucide-react';
 import { CATEGORIES, SPLIT_TYPES, CURRENCIES } from '../../utils/constants';
 import { formatCurrency } from '../../utils/helpers';
 import { expenseService } from '../../services';
@@ -13,6 +13,7 @@ const AddExpenseModal = ({ isOpen, onClose, trip, onAddExpense, initialData = nu
   const [category, setCategory] = useState('Food');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [paidBy, setPaidBy] = useState(members[0]?._id || '');
+  const [personalUser, setPersonalUser] = useState(members[0]?._id || '');
   const [splitType, setSplitType] = useState('equal');
   const [notes, setNotes] = useState('');
   const [receiptFile, setReceiptFile] = useState(null);
@@ -24,6 +25,7 @@ const AddExpenseModal = ({ isOpen, onClose, trip, onAddExpense, initialData = nu
   useEffect(() => {
     if (members.length > 0 && !paidBy) {
       setPaidBy(members[0]._id);
+      setPersonalUser(members[0]._id);
     }
   }, [members, paidBy]);
 
@@ -36,12 +38,19 @@ const AddExpenseModal = ({ isOpen, onClose, trip, onAddExpense, initialData = nu
       setPaidBy(initialData.paidBy?._id || initialData.paidBy || members[0]?._id || '');
       setSplitType(initialData.splitType || 'equal');
       setNotes(initialData.notes || '');
+
+      // Check if personal split
+      if (initialData.splitType === 'personal' && initialData.splitDetails) {
+        const target = initialData.splitDetails.find(d => (parseFloat(d.amount) || 0) > 0);
+        if (target) setPersonalUser(target.user?._id || target.user);
+      }
     } else {
       setTitle('');
       setAmount('');
       setCategory('Food');
       setDate(new Date().toISOString().split('T')[0]);
       setPaidBy(members[0]?._id || '');
+      setPersonalUser(members[0]?._id || '');
       setSplitType('equal');
       setNotes('');
       setReceiptFile(null);
@@ -53,17 +62,27 @@ const AddExpenseModal = ({ isOpen, onClose, trip, onAddExpense, initialData = nu
       const initial = {};
       const totalNum = parseFloat(amount) || 0;
       const equalShare = totalNum > 0 ? (totalNum / members.length).toFixed(2) : 0;
+      const targetPersonal = personalUser || paidBy || members[0]?._id;
 
       members.forEach((m) => {
-        initial[m._id] = {
-          amount: equalShare,
-          percentage: (100 / members.length).toFixed(1),
-          shares: 1,
-        };
+        if (splitType === 'personal') {
+          const isTarget = m._id === targetPersonal;
+          initial[m._id] = {
+            amount: isTarget ? totalNum : 0,
+            percentage: isTarget ? 100 : 0,
+            shares: isTarget ? 1 : 0,
+          };
+        } else {
+          initial[m._id] = {
+            amount: equalShare,
+            percentage: (100 / members.length).toFixed(1),
+            shares: 1,
+          };
+        }
       });
       setCustomSplits(initial);
     }
-  }, [members.length, amount]);
+  }, [members.length, amount, splitType, personalUser, paidBy]);
 
   if (!isOpen || !trip) return null;
 
@@ -184,10 +203,10 @@ const AddExpenseModal = ({ isOpen, onClose, trip, onAddExpense, initialData = nu
               />
             </div>
             <div>
-              <label className="form-label">Total Amount ({trip?.currency || 'USD'}) *</label>
+              <label className="form-label">Total Amount ({trip?.currency || 'INR'}) *</label>
               <div style={{ position: 'relative' }}>
                 <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 600 }}>
-                  {CURRENCIES[trip?.currency || 'USD']?.symbol || '$'}
+                  {CURRENCIES[trip?.currency || 'INR']?.symbol || '₹'}
                 </span>
                 <input
                   type="number"
@@ -240,20 +259,44 @@ const AddExpenseModal = ({ isOpen, onClose, trip, onAddExpense, initialData = nu
               <span>Split Method</span>
               <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Choose how to divide the cost</span>
             </label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '0.5rem' }}>
               {SPLIT_TYPES.filter(st => st.value !== 'unequal').map((st) => (
                 <button
                   type="button"
                   key={st.value}
                   className={`btn ${splitType === st.value ? 'btn-primary' : 'btn-outline'}`}
                   onClick={() => setSplitType(st.value)}
-                  style={{ padding: '0.5rem', fontSize: '0.85rem', flexDirection: 'column', height: 'auto', gap: '2px' }}
+                  style={{ padding: '0.55rem 0.4rem', fontSize: '0.82rem', flexDirection: 'column', height: 'auto', gap: '2px', textAlign: 'center' }}
                 >
                   <span style={{ fontWeight: 600 }}>{st.label}</span>
                 </button>
               ))}
             </div>
           </div>
+
+          {/* Personal Expense Member Selector */}
+          {splitType === 'personal' && (
+            <div style={{ background: 'rgba(99, 102, 241, 0.12)', padding: '0.85rem 1rem', borderRadius: '12px', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
+              <label className="form-label" style={{ fontWeight: 700, color: 'var(--primary-light)', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <UserCheck size={18} /> Personal Expense For Which Member?
+              </label>
+              <select
+                className="form-control"
+                value={personalUser}
+                onChange={(e) => setPersonalUser(e.target.value)}
+                style={{ background: 'var(--bg-main)', fontWeight: 600 }}
+              >
+                {members.map((m) => (
+                  <option key={m._id} value={m._id}>
+                    {m.name} {m._id === paidBy ? '(Payer)' : ''} - Charged 100% (₹{amount || 0})
+                  </option>
+                ))}
+              </select>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '6px 0 0 0' }}>
+                💡 Only this member is assigned the total expense. All other group members are set to <strong>₹0</strong>.
+              </p>
+            </div>
+          )}
 
           {/* Dynamic Split Breakdown per Member */}
           <div style={{ background: 'var(--bg-card-hover)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
@@ -262,7 +305,7 @@ const AddExpenseModal = ({ isOpen, onClose, trip, onAddExpense, initialData = nu
                 <Calculator size={16} color="var(--primary-light)" /> Split Breakdown per Member
               </span>
               <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                {members.length} member(s) involved
+                {splitType === 'personal' ? '1 member charged (others ₹0)' : `${members.length} member(s) involved`}
               </span>
             </div>
 
@@ -274,6 +317,8 @@ const AddExpenseModal = ({ isOpen, onClose, trip, onAddExpense, initialData = nu
 
                 if (splitType === 'equal') {
                   calculatedShare = currentTotal > 0 ? currentTotal / members.length : 0;
+                } else if (splitType === 'personal') {
+                  calculatedShare = m._id === (personalUser || paidBy || members[0]?._id) ? currentTotal : 0;
                 } else if (splitType === 'exact') {
                   calculatedShare = parseFloat(item.amount) || 0;
                 } else if (splitType === 'percentage') {
@@ -283,11 +328,31 @@ const AddExpenseModal = ({ isOpen, onClose, trip, onAddExpense, initialData = nu
                   calculatedShare = totalShares > 0 ? (currentTotal * (parseFloat(item.shares) || 0)) / totalShares : 0;
                 }
 
+                const isPersonalTarget = splitType === 'personal' && m._id === (personalUser || paidBy || members[0]?._id);
+
                 return (
-                  <div key={m._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.4rem 0.6rem', background: 'var(--bg-main)', borderRadius: '8px' }}>
+                  <div
+                    key={m._id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.5rem 0.75rem',
+                      background: isPersonalTarget ? 'rgba(99, 102, 241, 0.15)' : 'var(--bg-main)',
+                      borderRadius: '8px',
+                      border: isPersonalTarget ? '1px solid var(--primary-light)' : '1px solid transparent'
+                    }}
+                  >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <img src={m.profileImage || 'https://via.placeholder.com/30'} alt={m.name} style={{ width: '28px', height: '28px', borderRadius: '50%' }} />
-                      <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{m.name}</span>
+                      <div>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{m.name}</span>
+                        {isPersonalTarget && (
+                          <span style={{ marginLeft: '6px', fontSize: '0.72rem', background: 'var(--primary)', color: '#fff', padding: '2px 6px', borderRadius: '4px' }}>
+                            Personal 100%
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -331,8 +396,16 @@ const AddExpenseModal = ({ isOpen, onClose, trip, onAddExpense, initialData = nu
                         </div>
                       )}
 
-                      <span style={{ fontWeight: 700, fontSize: '0.9rem', minWidth: '70px', textAlign: 'right', color: 'var(--primary-light)' }}>
-                        {formatCurrency(calculatedShare, trip?.currency || 'USD')}
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          fontSize: '0.92rem',
+                          minWidth: '70px',
+                          textAlign: 'right',
+                          color: splitType === 'personal' && !isPersonalTarget ? 'var(--text-muted)' : 'var(--primary-light)'
+                        }}
+                      >
+                        {formatCurrency(calculatedShare, trip?.currency || 'INR')}
                       </span>
                     </div>
                   </div>

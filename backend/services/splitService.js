@@ -135,8 +135,18 @@ const calculateUnequalSplit = (splitDetails, totalAmount) => {
 };
 
 /**
+ * Calculate personal split - 100% amount assigned to one person, 0 to others
+ * @param {Array} splitDetails - Array of { user, amount }
+ * @param {number} totalAmount - Total expense amount
+ * @returns {Array} - Validated split details
+ */
+const calculatePersonalSplit = (splitDetails, totalAmount) => {
+  return calculateExactSplit(splitDetails, totalAmount);
+};
+
+/**
  * Main function to compute split based on type
- * @param {string} splitType - 'equal' | 'exact' | 'percentage' | 'shares' | 'unequal'
+ * @param {string} splitType - 'equal' | 'exact' | 'percentage' | 'shares' | 'unequal' | 'personal'
  * @param {number} amount - Total amount
  * @param {Array} participants - Array of user IDs
  * @param {Array} splitDetails - Optional split details for non-equal methods
@@ -154,6 +164,8 @@ const computeSplit = (splitType, amount, participants, splitDetails) => {
       return calculateSharesSplit(splitDetails, amount);
     case 'unequal':
       return calculateUnequalSplit(splitDetails, amount);
+    case 'personal':
+      return calculatePersonalSplit(splitDetails, amount);
     default:
       throw new Error(`Unknown split type: ${splitType}`);
   }

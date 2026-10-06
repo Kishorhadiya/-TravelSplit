@@ -21,6 +21,7 @@ export const CATEGORIES = [
 
 export const SPLIT_TYPES = [
   { value: 'equal', label: 'Equal Split', description: 'Divide equally among participants' },
+  { value: 'personal', label: 'Personal (100%)', description: 'Full amount for single person (others 0)' },
   { value: 'exact', label: 'Exact Amount', description: 'Specify exact amount for each person' },
   { value: 'percentage', label: 'Percentage', description: 'Split by percentage (must total 100%)' },
   { value: 'shares', label: 'By Shares', description: 'Divide by share ratio' },

@@ -380,6 +380,90 @@ const TripDetail = () => {
               </div>
             )}
           </div>
+
+          {/* Member Expense & Balance Breakdown Table */}
+          <div className="card" style={{ gridColumn: '1 / -1', padding: '1.5rem', overflowX: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Users size={20} color="var(--primary-light)" /> Member Expense & Balance Breakdown Table
+                </h3>
+                <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  Detailed summary of who paid how much, individual share, and who owes or gets money back
+                </p>
+              </div>
+              <button className="btn btn-outline btn-sm" onClick={() => setIsSettleUpOpen(true)}>
+                <DollarSign size={16} /> Record Settlement
+              </button>
+            </div>
+
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid var(--border-color)', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                  <th style={{ padding: '0.75rem 1rem' }}>MEMBER</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>TOTAL PAID (કેટલા ચૂકવ્યા)</th>
+                  <th style={{ padding: '0.75rem 1rem' }}>TOTAL SHARE (પોતાનો હિસ્સો)</th>
+                  <th style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>NET BALANCE (લેવાના / દેવાના)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {memberBalances.map((mb) => {
+                  const paidPct = totalExpensesAmount > 0 ? Math.round((mb.paid / totalExpensesAmount) * 100) : 0;
+                  return (
+                    <tr key={mb.user?._id || Math.random()} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s' }} className="hover-card">
+                      <td style={{ padding: '0.85rem 1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <img src={mb.user?.profileImage || 'https://via.placeholder.com/36'} alt="" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }} />
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{mb.user?.name || 'Member'}</div>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{mb.user?.email}</div>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td style={{ padding: '0.85rem 1rem' }}>
+                        <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>
+                          {formatCurrency(mb.paid, trip.currency)}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          {paidPct}% of total trip spending
+                        </div>
+                      </td>
+
+                      <td style={{ padding: '0.85rem 1rem' }}>
+                        <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                          {formatCurrency(mb.owed, trip.currency)}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          Responsible share
+                        </div>
+                      </td>
+
+                      <td style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>
+                        <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                          <span
+                            style={{
+                              fontWeight: 800,
+                              fontSize: '1.05rem',
+                              padding: '4px 10px',
+                              borderRadius: '8px',
+                              background: mb.netBalance > 0.01 ? 'var(--success-light)' : mb.netBalance < -0.01 ? 'var(--danger-light)' : 'var(--bg-card-hover)',
+                              color: mb.netBalance > 0.01 ? 'var(--success)' : mb.netBalance < -0.01 ? 'var(--danger)' : 'var(--text-muted)',
+                            }}
+                          >
+                            {mb.netBalance > 0 ? `+${formatCurrency(mb.netBalance, trip.currency)}` : mb.netBalance < 0 ? `-${formatCurrency(Math.abs(mb.netBalance), trip.currency)}` : `${formatCurrency(0, trip.currency)}`}
+                          </span>
+                          <span style={{ fontSize: '0.75rem', marginTop: '3px', fontWeight: 600, color: mb.netBalance > 0.01 ? 'var(--success)' : mb.netBalance < -0.01 ? 'var(--danger)' : 'var(--text-muted)' }}>
+                            {mb.netBalance > 0.01 ? 'Gets Back (લેવાના છે)' : mb.netBalance < -0.01 ? 'Owes (આપવાના છે)' : 'Settled Up (ક્લીયર)'}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -616,17 +700,15 @@ const TripDetail = () => {
                 <button className="btn btn-primary" onClick={() => setIsShareModalOpen(true)} style={{ flex: 1, justifyContent: 'center' }}>
                   <Share2 size={18} /> Share Join Link 🔗
                 </button>
-                <button
+                <a
+                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Hey! Join our travel trip "${trip.name}" on TravelSplit to manage and split expenses together:\n${window.location.origin}/register?tripId=${trip._id}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="btn"
-                  onClick={() => {
-                    const joinUrl = `${window.location.origin}/trips/join/${trip._id}`;
-                    const shareText = `Hey! Join our travel trip "${trip.name}" on TravelSplit to manage and split expenses together:\n${joinUrl}`;
-                    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank');
-                  }}
-                  style={{ background: '#25D366', color: '#fff', border: 'none', justifyContent: 'center', fontWeight: 600, gap: '0.5rem' }}
+                  style={{ background: '#25D366', color: '#fff', border: 'none', justifyContent: 'center', fontWeight: 600, gap: '0.5rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', padding: '0.55rem 1rem' }}
                 >
                   <MessageCircle size={18} /> WhatsApp
-                </button>
+                </a>
               </div>
             </div>
 
