@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Plane, Lock, Mail, User, ArrowRight } from 'lucide-react';
+import { Plane, Lock, Mail, User, ArrowRight, UserPlus } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import { tripService } from '../../services';
@@ -11,8 +11,31 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const { user, register, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const tripIdFromUrl = searchParams.get('tripId');
+
+  useEffect(() => {
+    if (tripIdFromUrl) {
+      localStorage.setItem('pendingTripId', tripIdFromUrl);
+    }
+    const targetTripId = tripIdFromUrl || localStorage.getItem('pendingTripId');
+    if (user && !authLoading && targetTripId) {
+      tripService
+        .join(targetTripId)
+        .then(({ data }) => {
+          localStorage.removeItem('pendingTripId');
+          toast.success(data?.message || 'Successfully joined trip! 🎉');
+          navigate(`/trips/${targetTripId}`);
+        })
+        .catch((err) => {
+          localStorage.removeItem('pendingTripId');
+          toast.error(err.response?.data?.message || 'Failed to join trip');
+          navigate(`/trips/${targetTripId}`);
+        });
+    }
+  }, [user, authLoading, tripIdFromUrl, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,7 +48,7 @@ const Register = () => {
       await register({ name, email, password, defaultCurrency: 'INR' });
       toast.success('Account created successfully! Welcome to TravelSplit 🎉');
       
-      const pendingTripId = localStorage.getItem('pendingTripId');
+      const pendingTripId = tripIdFromUrl || localStorage.getItem('pendingTripId');
       if (pendingTripId) {
         try {
           await tripService.join(pendingTripId);
@@ -35,6 +58,8 @@ const Register = () => {
           return;
         } catch (joinErr) {
           console.error('Auto join failed:', joinErr);
+          navigate(`/trips/${pendingTripId}`);
+          return;
         }
       }
       navigate('/dashboard');
@@ -77,6 +102,26 @@ const Register = () => {
             Join TravelSplit and organize group trip expenses effortlessly
           </p>
         </div>
+
+        {/* Invitation Banner if joining trip */}
+        {tripIdFromUrl && (
+          <div style={{
+            marginBottom: '1.25rem',
+            padding: '1rem',
+            borderRadius: '12px',
+            background: 'rgba(99, 102, 241, 0.15)',
+            border: '1px solid rgba(99, 102, 241, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem'
+          }}>
+            <UserPlus size={24} color="var(--primary-light)" />
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>Trip Invitation Received! ✈️</div>
+              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Create your account below to immediately join your friends' trip.</div>
+            </div>
+          </div>
+        )}
 
         {/* Card Form */}
         <div className="card" style={{ padding: '2.25rem', backdropFilter: 'blur(16px)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
@@ -150,7 +195,7 @@ const Register = () => {
           {/* Login Link */}
           <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-muted)', paddingTop: '1.25rem', borderTop: '1px solid var(--border)' }}>
             Already have an account?{' '}
-            <Link to="/login" style={{ color: 'var(--primary-light)', fontWeight: 600 }}>
+            <Link to={tripIdFromUrl ? `/login?tripId=${tripIdFromUrl}` : '/login'} style={{ color: 'var(--primary-light)', fontWeight: 600 }}>
               Sign in instead
             </Link>
           </div>

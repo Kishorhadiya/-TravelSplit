@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Plane, Lock, Mail, ArrowRight, ShieldCheck, Compass } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -10,8 +10,30 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { user, login, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const tripIdFromUrl = searchParams.get('tripId');
+
+  useEffect(() => {
+    if (tripIdFromUrl) {
+      localStorage.setItem('pendingTripId', tripIdFromUrl);
+    }
+    const targetTripId = tripIdFromUrl || localStorage.getItem('pendingTripId');
+    if (user && !authLoading && targetTripId) {
+      tripService
+        .join(targetTripId)
+        .then(({ data }) => {
+          localStorage.removeItem('pendingTripId');
+          toast.success(data?.message || 'Successfully joined trip! 🎉');
+          navigate(`/trips/${targetTripId}`);
+        })
+        .catch((err) => {
+          localStorage.removeItem('pendingTripId');
+          navigate(`/trips/${targetTripId}`);
+        });
+    }
+  }, [user, authLoading, tripIdFromUrl, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,7 +46,7 @@ const Login = () => {
       await login({ email, password });
       toast.success('Welcome back to TravelSplit! ✈️');
 
-      const pendingTripId = localStorage.getItem('pendingTripId');
+      const pendingTripId = tripIdFromUrl || localStorage.getItem('pendingTripId');
       if (pendingTripId) {
         try {
           await tripService.join(pendingTripId);
@@ -34,6 +56,8 @@ const Login = () => {
           return;
         } catch (joinErr) {
           console.error('Auto join failed:', joinErr);
+          navigate(`/trips/${pendingTripId}`);
+          return;
         }
       }
       navigate('/dashboard');
@@ -140,7 +164,7 @@ const Login = () => {
           {/* Register Link */}
           <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-muted)', paddingTop: '1.25rem', borderTop: '1px solid var(--border)' }}>
             Don't have an account?{' '}
-            <Link to="/register" style={{ color: 'var(--primary-light)', fontWeight: 600 }}>
+            <Link to={tripIdFromUrl ? `/register?tripId=${tripIdFromUrl}` : '/register'} style={{ color: 'var(--primary-light)', fontWeight: 600 }}>
               Create an account
             </Link>
           </div>

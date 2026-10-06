@@ -7,7 +7,7 @@ const ShareTripModal = ({ isOpen, onClose, trip }) => {
 
   if (!isOpen || !trip) return null;
 
-  const joinUrl = `${window.location.origin}/trips/join/${trip._id}`;
+  const joinUrl = `${window.location.origin}/register?tripId=${trip._id}`;
   const shareText = `Hey! Join our travel trip "${trip.name}" on TravelSplit to manage and split expenses together:\n${joinUrl}`;
 
   const handleCopy = () => {
