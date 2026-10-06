@@ -17,6 +17,22 @@ const ShareTripModal = ({ isOpen, onClose, trip }) => {
     setTimeout(() => setCopied(false), 2500);
   };
 
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Join ${trip.name}`,
+          text: `Join our travel trip "${trip.name}" on TravelSplit!`,
+          url: joinUrl,
+        });
+      } catch (err) {
+        console.log('Share cancelled', err);
+      }
+    } else {
+      handleCopy();
+    }
+  };
+
   const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
   const mailSubject = encodeURIComponent(`Join ${trip.name} on TravelSplit`);
   const mailBody = encodeURIComponent(shareText);
