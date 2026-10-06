@@ -15,21 +15,26 @@ const JoinTrip = () => {
     if (!id) return;
     localStorage.setItem('pendingTripId', id);
 
-    if (user && !authLoading) {
-      setJoining(true);
-      tripService
-        .join(id)
-        .then(({ data }) => {
-          localStorage.removeItem('pendingTripId');
-          toast.success(data?.message || 'Successfully joined trip! 🎉');
-          navigate(`/trips/${id}`);
-        })
-        .catch((err) => {
-          localStorage.removeItem('pendingTripId');
-          toast.error(err.response?.data?.message || 'Failed to join trip or link expired');
-          navigate('/trips');
-        })
-        .finally(() => setJoining(false));
+    if (!authLoading) {
+      if (user) {
+        setJoining(true);
+        tripService
+          .join(id)
+          .then(({ data }) => {
+            localStorage.removeItem('pendingTripId');
+            toast.success(data?.message || 'Successfully joined trip! 🎉');
+            navigate(`/trips/${id}`);
+          })
+          .catch((err) => {
+            localStorage.removeItem('pendingTripId');
+            toast.error(err.response?.data?.message || 'Failed to join trip or link expired');
+            navigate('/trips');
+          })
+          .finally(() => setJoining(false));
+      } else {
+        toast('Please create an account to join the trip! ✈️', { icon: '👋' });
+        navigate('/register', { replace: true });
+      }
     }
   }, [id, user, authLoading, navigate]);
 

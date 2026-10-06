@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Plus, TrendingUp, TrendingDown, DollarSign, Plane, Users,
+  Plus, TrendingUp, TrendingDown, IndianRupee, Plane, Users,
   CreditCard, ChevronRight, Calendar, AlertCircle, RefreshCw
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -138,7 +138,7 @@ const Dashboard = () => {
           <div>
             <div className="stat-label">You Are Owed</div>
             <div className="stat-value" style={{ color: 'var(--success)' }}>
-              +{formatCurrency(stats.youGet || 0, user?.defaultCurrency || 'USD')}
+              +{formatCurrency(stats.youGet || 0, user?.defaultCurrency || 'INR')}
             </div>
             <div className="stat-change" style={{ color: 'var(--success)' }}>
               Calculated from active expenses
@@ -153,7 +153,7 @@ const Dashboard = () => {
           <div>
             <div className="stat-label">You Owe</div>
             <div className="stat-value" style={{ color: 'var(--danger)' }}>
-              -{formatCurrency(stats.youOwe || 0, user?.defaultCurrency || 'USD')}
+              -{formatCurrency(stats.youOwe || 0, user?.defaultCurrency || 'INR')}
             </div>
             <div className="stat-change" style={{ color: 'var(--text-muted)' }}>
               Pending trip shares
@@ -163,12 +163,12 @@ const Dashboard = () => {
 
         <div className="stat-card">
           <div className="stat-icon" style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' }}>
-            <DollarSign size={24} />
+            <IndianRupee size={24} />
           </div>
           <div>
             <div className="stat-label">Net Balance</div>
             <div className="stat-value" style={{ color: (stats.netBalance || 0) >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-              {(stats.netBalance || 0) >= 0 ? '+' : ''}{formatCurrency(stats.netBalance || 0, user?.defaultCurrency || 'USD')}
+              {(stats.netBalance || 0) >= 0 ? '+' : ''}{formatCurrency(stats.netBalance || 0, user?.defaultCurrency || 'INR')}
             </div>
             <div className="stat-change" style={{ color: 'var(--text-muted)' }}>
               Overall balance
@@ -313,7 +313,7 @@ const Dashboard = () => {
 
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text-main)' }}>
-                          {formatCurrency(exp.amount, exp.currency || 'USD')}
+                          {formatCurrency(exp.amount, exp.currency || 'INR')}
                         </div>
                         <span className="badge badge-primary" style={{ fontSize: '0.7rem', textTransform: 'capitalize' }}>
                           {exp.splitType} Split
@@ -357,7 +357,7 @@ const Dashboard = () => {
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value) => formatCurrency(value, user?.defaultCurrency || 'USD')} />
+                      <Tooltip formatter={(value) => formatCurrency(value, user?.defaultCurrency || 'INR')} />
                     </RePieChart>
                   </ResponsiveContainer>
                 </div>
@@ -370,7 +370,7 @@ const Dashboard = () => {
                         <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: cat.color }} />
                         <span style={{ color: 'var(--text-muted)' }}>{cat.name}</span>
                       </div>
-                      <span style={{ fontWeight: 600 }}>{formatCurrency(cat.value, user?.defaultCurrency || 'USD')}</span>
+                      <span style={{ fontWeight: 600 }}>{formatCurrency(cat.value, user?.defaultCurrency || 'INR')}</span>
                     </div>
                   ))}
                 </div>

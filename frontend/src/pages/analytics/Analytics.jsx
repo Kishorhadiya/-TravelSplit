@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PieChart, BarChart2, TrendingUp, DollarSign, Compass } from 'lucide-react';
+import { PieChart, BarChart2, TrendingUp, IndianRupee, Compass } from 'lucide-react';
 import { analyticsService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import { formatCurrency } from '../../utils/helpers';
@@ -72,11 +72,11 @@ const Analytics = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
         <div className="stat-card">
           <div className="stat-icon" style={{ background: 'rgba(99, 102, 241, 0.15)', color: 'var(--primary-light)' }}>
-            <DollarSign size={24} />
+            <IndianRupee size={24} />
           </div>
           <div>
             <div className="stat-label">Total Spent All Trips</div>
-            <div className="stat-value">{formatCurrency(stats.totalExpenses, user?.defaultCurrency || 'USD')}</div>
+            <div className="stat-value">{formatCurrency(stats.totalExpenses, user?.defaultCurrency || 'INR')}</div>
             <div className="stat-change" style={{ color: 'var(--primary-light)' }}>Across {stats.totalTrips} trips</div>
           </div>
         </div>
@@ -87,7 +87,7 @@ const Analytics = () => {
           </div>
           <div>
             <div className="stat-label">Total You Get Back</div>
-            <div className="stat-value" style={{ color: 'var(--success)' }}>+{formatCurrency(stats.youGet, user?.defaultCurrency || 'USD')}</div>
+            <div className="stat-value" style={{ color: 'var(--success)' }}>+{formatCurrency(stats.youGet, user?.defaultCurrency || 'INR')}</div>
             <div className="stat-change" style={{ color: 'var(--success)' }}>From paid expenses</div>
           </div>
         </div>
@@ -98,7 +98,7 @@ const Analytics = () => {
           </div>
           <div>
             <div className="stat-label">Total You Owe</div>
-            <div className="stat-value" style={{ color: 'var(--danger)' }}>-{formatCurrency(stats.youOwe, user?.defaultCurrency || 'USD')}</div>
+            <div className="stat-value" style={{ color: 'var(--danger)' }}>-{formatCurrency(stats.youOwe, user?.defaultCurrency || 'INR')}</div>
             <div className="stat-change" style={{ color: 'var(--text-muted)' }}>Pending balances</div>
           </div>
         </div>
@@ -132,7 +132,7 @@ const Analytics = () => {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => formatCurrency(value, user?.defaultCurrency || 'USD')} />
+                  <Tooltip formatter={(value) => formatCurrency(value, user?.defaultCurrency || 'INR')} />
                 </RePieChart>
               </ResponsiveContainer>
             </div>
@@ -144,7 +144,7 @@ const Analytics = () => {
                     <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: cat.color }} />
                     <span style={{ fontWeight: 500, fontSize: '0.9rem' }}>{cat.name}</span>
                   </div>
-                  <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>{formatCurrency(cat.value, user?.defaultCurrency || 'USD')}</span>
+                  <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>{formatCurrency(cat.value, user?.defaultCurrency || 'INR')}</span>
                 </div>
               ))}
             </div>

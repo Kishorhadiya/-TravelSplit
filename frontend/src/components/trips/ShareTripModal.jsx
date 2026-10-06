@@ -17,32 +17,9 @@ const ShareTripModal = ({ isOpen, onClose, trip }) => {
     setTimeout(() => setCopied(false), 2500);
   };
 
-  const handleWhatsAppShare = () => {
-    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
-    window.open(waUrl, '_blank');
-  };
-
-  const handleEmailShare = () => {
-    const subject = encodeURIComponent(`Join ${trip.name} on TravelSplit`);
-    const body = encodeURIComponent(shareText);
-    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
-  };
-
-  const handleNativeShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Join ${trip.name}`,
-          text: `Join our travel trip "${trip.name}" on TravelSplit!`,
-          url: joinUrl,
-        });
-      } catch (err) {
-        console.log('Share cancelled', err);
-      }
-    } else {
-      handleCopy();
-    }
-  };
+  const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+  const mailSubject = encodeURIComponent(`Join ${trip.name} on TravelSplit`);
+  const mailBody = encodeURIComponent(shareText);
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -95,10 +72,12 @@ const ShareTripModal = ({ isOpen, onClose, trip }) => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <label className="form-label" style={{ fontWeight: 600, margin: 0 }}>Instant Share Options</label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.75rem' }}>
-              {/* WhatsApp Share Button */}
-              <button
+              {/* WhatsApp Share Anchor Link */}
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="btn"
-                onClick={handleWhatsAppShare}
                 style={{
                   background: '#25D366',
                   color: '#fff',
@@ -106,20 +85,21 @@ const ShareTripModal = ({ isOpen, onClose, trip }) => {
                   justifyContent: 'center',
                   fontWeight: 600,
                   gap: '0.5rem',
-                  padding: '0.75rem'
+                  padding: '0.75rem',
+                  textDecoration: 'none'
                 }}
               >
                 <MessageCircle size={18} /> WhatsApp
-              </button>
+              </a>
 
-              {/* Email Share Button */}
-              <button
+              {/* Email Share Link */}
+              <a
+                href={`mailto:?subject=${mailSubject}&body=${mailBody}`}
                 className="btn btn-outline"
-                onClick={handleEmailShare}
-                style={{ justifyContent: 'center', fontWeight: 600, gap: '0.5rem', padding: '0.75rem' }}
+                style={{ justifyContent: 'center', fontWeight: 600, gap: '0.5rem', padding: '0.75rem', textDecoration: 'none' }}
               >
                 <Mail size={18} /> Email Link
-              </button>
+              </a>
 
               {/* Web Native Share (if supported) */}
               {navigator.share && (
